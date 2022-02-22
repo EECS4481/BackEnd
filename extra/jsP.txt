@@ -1,0 +1,10 @@
+npm init
+npm install express mysql body-parser ejs dotenv axios cookie-session express-session bcrypt js-sha256
+npm install --save-dev nodemon
+	"scripts": {
+    	"start": "nodemon app.js",
+    	"test": "echo \"Error: no test specified\" && exit 1"
+  	}, --> in package.json
+npm start
+
+node index.js
