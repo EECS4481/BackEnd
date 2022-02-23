@@ -20,7 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `project4481-2.0`
 --
-
+CREATE DATABASE `project4481-2.0`;
+USE `project4481-2.0`;
 -- --------------------------------------------------------
 
 --
