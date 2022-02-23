@@ -34,8 +34,9 @@ app.use(
 );
 
 //  global variables
-let uid = 0;
+const uid = 0;
 const active = [];
+const transfer = [];
 
 //  connection test
 app.get("/", (req, res) => {
@@ -58,33 +59,22 @@ app.get("/api/getClientId", (req, res) => {
 
 //  Get email and password --> if authentication succeeded returns name and id else return empty array
 app.get("/api/login/:email/:password", (req, res) => {
-  //   req.params.password = sha256(req.params.password);
-  try {
-    req.params.password = sha256(req.params.password);
-    dao.getProviderByEmail(req.params, (user) => {
-      res.setHeader("Content-Type", "application/json");
-      //  user.length --> gives us the number of elements in array
+  req.params.password = sha256(req.params.password);
+  dao.getProviderByEmail(req.params, (user) => {
+    res.setHeader("Content-Type", "application/json");
+    if (user == null) {
+      //  if credentials are wrong we will get empty object
+      res.write(JSON.stringify({ name: "", provider_id: "" }));
+    } else {
+      //  if credentials are correct we will get name and provider ID
       res.write(JSON.stringify(user));
       //  add the user in global active array
       if (active.indexOf(user.provider_id) == -1) {
         active.push(user.provider_id);
       }
-      res.end();
-    });
-  } catch (err) {
-    console.log(err);
-  }
-  //   req.params.password = sha256(req.params.password);
-  //   dao.getProviderByEmail(req.params, (user) => {
-  //     res.setHeader("Content-Type", "application/json");
-  //     //  user.length --> gives us the number of elements in array
-  //     res.write(JSON.stringify(user));
-  //     //  add the user in global active array
-  //     if (active.indexOf(user.provider_id) == -1) {
-  //       active.push(user.provider_id);
-  //     }
-  //     res.end();
-  //   });
+    }
+    res.end();
+  });
 });
 
 //  remove the user from active array
@@ -95,7 +85,7 @@ app.get("/api/logout/:id", (req, res) => {
     res.setHeader("Content-Type", "text/plain");
     res.send("you have logged out successfully");
   } else {
-    console.log("error");
+    console.log("This User was not Active");
     res.end();
   }
 });
@@ -119,6 +109,24 @@ app.post("/api/addConversation", (req, res) => {
       res.end();
     });
   });
+});
+
+//  add to or remove from transfer array the client
+//  send for status:    add client to array
+//  receive for status: remove client from tansfer array
+app.get("/api/clientTransfer/:clientID/:status", (req, res) => {
+  if (req.params.status == "send") {
+    transfer.push(req.params.clientID);
+    console.log(transfer);
+    res.send(req.params.clientID);
+  } else if (req.params.status == "receive") {
+    let index = transfer.indexOf(req.params.clientID);
+    transfer.splice(index, 1);
+    console.log(transfer);
+    res.send(req.params.clientID);
+  } else {
+    res.send("Bad Request!");
+  }
 });
 
 // Chat Table API --> Not Working right now
