@@ -37,7 +37,8 @@ app.use(
 let uid = 0;
 let active = [];
 let ready = [];
-let inchat = [];
+let inchat = []; //  {provider_id: 'id', client_id: 'id'}
+let ppc = []; //  {provider1_id: 'id', provider2_id: 'id'}
 let transfer = [];
 
 //  connection test
@@ -143,32 +144,146 @@ app.get("/api/providerReady/:id", (req, res) => {
   res.end("you are added to ready providers list!");
 });
 
-//  remove the first provider from ready list and add the provider to the inchat
-//  and return the selected provider id in plain text
-app.get("/api/startChat", (req, res) => {
-  res.setHeader("Content-Type", "text/plain");
-  let pid = ready.shift();
-  if (inchat.indexOf(pid) == -1) {
-    inchat.push(pid);
+//  remove the first provider from ready list and add the
+//  provider and client to the inchat list
+//  and returns both parties
+//  also prevents client to opens more than 1 chat
+app.get("/api/startChat/:cid", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  let index = -1;
+  for (i = 0; i < inchat.length; i++) {
+    if (inchat[i].client_id == req.params.cid) {
+      index = i;
+    }
   }
-  res.send(pid);
+  if (index != -1) {
+    res.send(JSON.stringify({ status: "You are already in the chat!" }));
+  } else {
+    let pid = ready.shift();
+    if (pid == null) {
+      res.send(JSON.stringify({ status: "No Provider is ready!" }));
+    } else {
+      let obj = { provider_id: pid, client_id: req.params.cid };
+      if (inchat.indexOf(obj) == -1) {
+        inchat.push(obj);
+      }
+      console.log(inchat);
+      res.send(JSON.stringify(obj));
+    }
+  }
 });
 
-//  when chat endded the provider will be removed from the inchat list
+//  first id is for the provider who start chat the next
+//  is the other provider
+//  add both party to ppc list
+app.get("/api/startChatPP/:p1id/:p2id", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  let obj = { provider1_id: req.params.p1id, provider2_id: req.params.p2id };
+  if (req.params.p1id == req.params.p2id) {
+    res.send(JSON.stringify({ status: "You cannot chat with yourself:)" }));
+  } else {
+    let index = -1;
+    for (i = 0; i < ppc.length; i++) {
+      if (
+        (ppc[i].provider1_id == req.params.p1id &&
+          ppc[i].provider2_id == req.params.p2id) ||
+        (ppc[i].provider1_id == req.params.p2id &&
+          ppc[i].provider2_id == req.params.p1id)
+      ) {
+        index = i;
+      }
+    }
+    if (index == -1) {
+      ppc.push(obj);
+      console.log(ppc);
+      res.send(JSON.stringify(obj));
+    } else {
+      res.send(JSON.stringify({ status: "The chat is already existed!" }));
+    }
+  }
+});
+
+//  when chat endded the both party will be removed from the inchat list
+//  client should write client as second argument
+//  provider should write provider as second argument
 app.get("/api/endChat/:id", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
-  let index = inchat.indexOf(req.params.id);
+  let index = -1;
+  for (i = 0; i < inchat.length; i++) {
+    if (
+      inchat[i].provider_id == req.params.id ||
+      inchat[i].client_id == req.params.id
+    ) {
+      index = i;
+    }
+  }
   if (index > -1) {
     inchat.splice(index, 1);
+    console.log(inchat);
+    res.send("chat endded succesfully!");
+  } else {
+    res.send("There is no chat!");
   }
-  res.send("chat endded succesfully!");
 });
 
-// Chat Table API --> Not Working right now
-app.get("/api/createChat/:user1/:user2", (req, res) => {
+//  when chat endded the both party will be removed from the ppc list
+//  to request the user enter both parties id (themselves first)
+//  chat will be removed
+app.get("/api/endChatPP/:p1id/:p2id", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
-  dao.createChat(req.params, (chat) => {});
-  res.end();
+  let obj = { provider1_id: req.params.p1id, provider2_id: req.params.p2id };
+  let objR = { provider1_id: req.params.p2id, provider2_id: req.params.p1id };
+  let index = -1;
+  for (i = 0; i < ppc.length; i++) {
+    if (ppc[i] == obj || ppc[i] == objR) {
+      index = i;
+    }
+  }
+  if (index > -1) {
+    ppc.splice(index, 1);
+    console.log(ppc);
+    res.send("chat endded succesfully!");
+  } else {
+    res.send("There is no chat!");
+  }
+});
+
+//  get provider id and check if the provider in the chat
+//  return both parties of the chat if the chat exist
+app.get("/api/provideChatCheck/:id/:party", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  if (req.params.party == "provider") {
+    let conversations = [];
+    for (i = 0; i < ppc.length; i++) {
+      if (
+        ppc[i].provider1_id == req.params.id ||
+        ppc[i].provider2_id == req.params.id
+      ) {
+        conversations.push(ppc[i]);
+      }
+    }
+    if (conversations.length == 0) {
+      res.send(JSON.stringify({ status: "There is no chat for you!" }));
+    } else {
+      res.send(ppc);
+      res.end();
+    }
+  } else if (req.params.party == "client") {
+    let conversations = [];
+    for (i = 0; i < inchat.length; i++) {
+      if (inchat[i].provider_id == req.params.id) {
+        conversations.push(inchat[i]);
+      }
+    }
+    if (conversations.length == 0) {
+      res.send(JSON.stringify({ status: "There is no chat for you!" }));
+    } else {
+      res.send(inchat);
+      res.end();
+    }
+  } else {
+    res.send(JSON.stringify({ status: "Bad Request!" }));
+  }
 });
 
 const server = app.listen(port, function () {
