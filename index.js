@@ -176,22 +176,23 @@ app.get("/api/transferClient/:cid/:from", (req, res) => {
     if (inchat.indexOf(obj) == -1) {
       inchat.push(obj);
     }
-    
+
     let index = inchat.length - 1;
 
     // removing the old provider from chat
     while (index >= 0) {
       let item = inchat[index];
-      if (item.provider_id == req.params.from &&
-        item.client_id == req.params.cid) {
-          inchat.splice(index, 1);
+      if (
+        item.provider_id == req.params.from &&
+        item.client_id == req.params.cid
+      ) {
+        inchat.splice(index, 1);
       }
-    index--;
+      index--;
     }
 
     console.log(inchat);
     res.send(JSON.stringify(obj));
-
   }
 });
 
@@ -224,23 +225,21 @@ app.get("/api/startChat/:cid", (req, res) => {
   }
 });
 
-
 app.get("/api/checkProvider/:cid", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   let index = inchat.length - 1;
   // removing the old provider from chat
   while (index >= 0) {
     let item = inchat[index];
-    if ( item.client_id == req.params.cid) {
+    if (item.client_id == req.params.cid) {
       console.log(item);
       res.send(item);
       return;
     }
-  index--;
+    index--;
   }
   res.send("");
 });
-
 
 //  first id is for the provider who start chat the next
 //  is the other provider
