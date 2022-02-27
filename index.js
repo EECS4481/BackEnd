@@ -10,6 +10,7 @@ app.enable("trust proxy");
 const dao = require("./dao.js");
 const { json } = require("body-parser");
 const { count } = require("console");
+const { read } = require("fs");
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -83,6 +84,11 @@ app.get("/api/login/:email/:password", (req, res) => {
 //  remove the user from active array
 app.get("/api/logout/:id", (req, res) => {
   const index = active.indexOf(req.params.id);
+  // we also have to remove from the ready queue
+  const readyIndex = ready.indexOf(req.params.id);
+  if (readyIndex > -1) {
+    ready.splice(readyIndex, 1);
+  }
   if (index > -1) {
     active.splice(index, 1);
     res.setHeader("Content-Type", "text/plain");
@@ -105,6 +111,7 @@ app.get("/api/getConversationHistory/:sender/:receiver", (req, res) => {
 //  add to message table and the return the whole chat history with new message
 app.post("/api/addConversation", (req, res) => {
   res.setHeader("Content-Type", "application/json");
+  console.log(req);
   dao.postConversation(req.body, () => {
     dao.getConversationHistory(req.body, (chat) => {
       res.setHeader("Content-Type", "application/json");
@@ -144,6 +151,50 @@ app.get("/api/providerReady/:id", (req, res) => {
   res.end("you are added to ready providers list!");
 });
 
+// takes no parameters
+// returns a list of all available providers
+app.get("/api/readyProviders", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.end(JSON.stringify(ready));
+});
+
+// transfers a client to a new provider
+app.get("/api/transferClient/:cid/:from", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  let pid = null;
+  // finding some other provider
+  ready.forEach((p) => {
+    if (p != req.params.from) {
+      pid = p;
+    }
+  });
+
+  if (pid == null) {
+    res.send(JSON.stringify({ status: "No other Provider is ready!" }));
+  } else {
+    let obj = { provider_id: pid, client_id: req.params.cid };
+    if (inchat.indexOf(obj) == -1) {
+      inchat.push(obj);
+    }
+    
+    let index = inchat.length - 1;
+
+    // removing the old provider from chat
+    while (index >= 0) {
+      let item = inchat[index];
+      if (item.provider_id == req.params.from &&
+        item.client_id == req.params.cid) {
+          inchat.splice(index, 1);
+      }
+    index--;
+    }
+
+    console.log(inchat);
+    res.send(JSON.stringify(obj));
+
+  }
+});
+
 //  remove the first provider from ready list and add the
 //  provider and client to the inchat list
 //  and returns both parties
@@ -172,6 +223,24 @@ app.get("/api/startChat/:cid", (req, res) => {
     }
   }
 });
+
+
+app.get("/api/checkProvider/:cid", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  let index = inchat.length - 1;
+  // removing the old provider from chat
+  while (index >= 0) {
+    let item = inchat[index];
+    if ( item.client_id == req.params.cid) {
+      console.log(item);
+      res.send(item);
+      return;
+    }
+  index--;
+  }
+  res.send("");
+});
+
 
 //  first id is for the provider who start chat the next
 //  is the other provider
