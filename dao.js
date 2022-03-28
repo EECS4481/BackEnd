@@ -1,3 +1,4 @@
+const validator = require("validator");
 const mysql = require("mysql");
 const con = mysql.createConnection({
   host: "localhost",
@@ -24,6 +25,7 @@ module.exports = {
       "SELECT name, provider_id FROM provider WHERE email = ? AND password = ?",
       [queries.email, queries.password],
       (err, rows) => {
+        console.log(rows);
         if (err == null) {
           success(rows[0]);
         } else {
@@ -51,7 +53,7 @@ module.exports = {
   postConversation(queries, success, failure = console.log) {
     con.query(
       "INSERT INTO message (sender_id, receiver_id, content) VALUES (?, ?, ?)",
-      [queries.sender, queries.receiver, queries.content],
+      [queries.sender, queries.receiver, validator.escape(queries.content)],
       (err, rows) => {
         if (err == null) {
           success(console.log(`${queries.content} added to table`));
