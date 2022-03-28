@@ -5,15 +5,21 @@ const port = process.argv[2] || 4000;
 const path = require("path");
 const sha256 = require("js-sha256");
 const cookieParser = require('cookie-parser')
+const upload = require("express-fileupload");
+const fs = require("fs");
+const validator = require("validator");
+
 
 const session = require("express-session");
 app.enable("trust proxy");
 app.use(cookieParser())
 
 const dao = require("./dao.js");
-const {json} = require("body-parser");
-const {count} = require("console");
 const {read} = require("fs");
+const { json } = require("body-parser");
+const { count } = require("console");
+const file = require("fs-extra/lib/ensure/file");
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -36,6 +42,8 @@ app.use(
         proxy: true,
     })
 );
+
+app.use(upload());
 
 //  global variables
 let uid = 0;
@@ -157,6 +165,56 @@ app.post("/api/addConversation", (req, res) => {
             res.end();
         });
     });
+});
+
+//  add a file to the chat
+app.get("/api/upload", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+  // res.end();
+});
+
+// get client ID to store the files to its subfolder
+app.post("/api/upload", (req, res) => {
+  if (req.files) {
+    var file = req.files.file;
+    var filename = file.name;
+    var saveName = Date.now() + "_" + filename;
+    // var dir = './FILES/';
+    // console.log(dir);
+    // try {
+    //   if(!fs.existsSync(dir)) {
+    //     fs.mkdirSync(dir);
+    //     console.log("Directory is Creadted.")
+    //   } else {
+    //     console.log("Directory is already exists.")
+    //   }
+    // } catch(err) {
+    //   console.log(err);
+    // }
+    file.mv("./FILES/" + saveName, (err) => {
+      if (err) {
+        console.log(err);
+        res.end();
+      } else {
+        res.write(saveName);
+        res.end("File Uploaded succesfully");
+      }
+    });
+  } else {
+    res.end("error!");
+  }
+});
+
+// download the requestd file from Files folder (don't forget its suffix)
+app.get("/api/download/:filename", (req, res) => {
+  // var file = `${__dirname}/Files/${req.params.filename}`;
+  // console.log(file);
+  // res.write(res.download(file));
+  // res.end();
+  fs.readFile("./Files/" + req.params.filename, (err, data) => {
+    console.log(data);
+    res.end(data);
+  });
 });
 
 //  add to or remove from transfer array the client
