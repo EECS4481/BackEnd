@@ -4,6 +4,7 @@ const app = express();
 const port = process.argv[2] || 4000;
 const path = require("path");
 const sha256 = require("js-sha256");
+const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const upload = require("express-fileupload");
 const fs = require("fs");
@@ -13,11 +14,12 @@ const validator = require("validator");
 const session = require("express-session");
 app.enable("trust proxy");
 app.use(cookieParser())
+app.use(cors())
 
 const dao = require("./dao.js");
 const {read} = require("fs");
-const { json } = require("body-parser");
-const { count } = require("console");
+const {json} = require("body-parser");
+const {count} = require("console");
 const file = require("fs-extra/lib/ensure/file");
 
 app.use(express.json());
@@ -85,7 +87,8 @@ app.get("/api/login/:email/:password", (req, res) => {
         } else {
             //  if credentials are correct we will get name and provider ID
             const cookie = generateCookie()
-            res.cookie("session", cookie, {maxAge: 10800});
+            res.cookie("session", cookie, {maxAge: 1000, httpOnly: true});
+
             dao.addCookie(user.provider_id, cookie, () => {
                 res.write(JSON.stringify(user));
                 //  add the user in global active array
@@ -169,52 +172,52 @@ app.post("/api/addConversation", (req, res) => {
 
 //  add a file to the chat
 app.get("/api/upload", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-  // res.end();
+    res.sendFile(__dirname + "/index.html");
+    // res.end();
 });
 
 // get client ID to store the files to its subfolder
 app.post("/api/upload", (req, res) => {
-  if (req.files) {
-    var file = req.files.file;
-    var filename = file.name;
-    var saveName = Date.now() + "_" + filename;
-    // var dir = './FILES/';
-    // console.log(dir);
-    // try {
-    //   if(!fs.existsSync(dir)) {
-    //     fs.mkdirSync(dir);
-    //     console.log("Directory is Creadted.")
-    //   } else {
-    //     console.log("Directory is already exists.")
-    //   }
-    // } catch(err) {
-    //   console.log(err);
-    // }
-    file.mv("./FILES/" + saveName, (err) => {
-      if (err) {
-        console.log(err);
-        res.end();
-      } else {
-        res.write(saveName);
-        res.end("File Uploaded succesfully");
-      }
-    });
-  } else {
-    res.end("error!");
-  }
+    if (req.files) {
+        var file = req.files.file;
+        var filename = file.name;
+        var saveName = Date.now() + "_" + filename;
+        // var dir = './FILES/';
+        // console.log(dir);
+        // try {
+        //   if(!fs.existsSync(dir)) {
+        //     fs.mkdirSync(dir);
+        //     console.log("Directory is Creadted.")
+        //   } else {
+        //     console.log("Directory is already exists.")
+        //   }
+        // } catch(err) {
+        //   console.log(err);
+        // }
+        file.mv("./FILES/" + saveName, (err) => {
+            if (err) {
+                console.log(err);
+                res.end();
+            } else {
+                res.write(saveName);
+                res.end("File Uploaded succesfully");
+            }
+        });
+    } else {
+        res.end("error!");
+    }
 });
 
 // download the requestd file from Files folder (don't forget its suffix)
 app.get("/api/download/:filename", (req, res) => {
-  // var file = `${__dirname}/Files/${req.params.filename}`;
-  // console.log(file);
-  // res.write(res.download(file));
-  // res.end();
-  fs.readFile("./Files/" + req.params.filename, (err, data) => {
-    console.log(data);
-    res.end(data);
-  });
+    // var file = `${__dirname}/Files/${req.params.filename}`;
+    // console.log(file);
+    // res.write(res.download(file));
+    // res.end();
+    fs.readFile("./Files/" + req.params.filename, (err, data) => {
+        console.log(data);
+        res.end(data);
+    });
 });
 
 //  add to or remove from transfer array the client
@@ -244,13 +247,13 @@ app.get("/api/providerReady/:id", (req, res) => {
 
     const id = req.params.id;
     const session = req.cookies.session;
-
+    console.log(session, id)
     dao.authenticate(id, session, () => {
-
 
         if (ready.indexOf(req.params.id) == -1) {
             ready.push(req.params.id);
         }
+        console.log("Provider ready")
         res.end("you are added to ready providers list!");
 
     }, () => {
@@ -270,7 +273,6 @@ app.get("/api/readyProviders", (req, res) => {
 // transfers a client to a new provider
 app.get("/api/transferClient/:cid/:from", (req, res) => {
     res.setHeader("Content-Type", "application/json");
-
 
     const id = req.params.from;
     const session = req.cookies.session;
@@ -371,7 +373,6 @@ app.get("/api/startChatPP/:p1id/:p2id", (req, res) => {
     const session = req.cookies.session;
 
     dao.authenticate(id, session, () => {
-
 
         let obj = {provider1_id: req.params.p1id, provider2_id: req.params.p2id};
         if (req.params.p1id == req.params.p2id) {
