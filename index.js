@@ -202,7 +202,7 @@ app.post("/api/upload", (req, res) => {
         res.end();
       } else {
         res.write(saveName);
-        res.end("File Uploaded succesfully");
+        res.end("");
       }
     });
   } else {
