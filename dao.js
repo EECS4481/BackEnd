@@ -2,8 +2,8 @@ const validator = require("validator");
 const mysql = require("mysql");
 const con = mysql.createConnection({
   host: "localhost",
-  user: "root",
-  password: "",
+  user: "asdf",
+  password: "asdf",
   database: "project4481-2.0",
 });
 
@@ -20,6 +20,24 @@ module.exports = {
   },
   removeSession(id, session) {
     con.query("DELETE FROM sessions WHERE id = ?", [id]);
+  },
+
+  //  Get user and password for authentication --> return name and provider ID
+  getProviderByEmail(queries, success, failure = console.log) {
+    con.query(
+      "SELECT name, provider_id FROM provider WHERE email = ? AND password = ?",
+      [queries.email, queries.password],
+      (err, rows) => {
+        if (err == null) {
+          console.log(rows);
+          success(rows[0]);
+        } else {
+          console.log(err);
+          failure(err);
+        }
+      }
+    );
+    console.log(con.query);
   },
 
   //  Get user and password for authentication --> return name and provider ID
@@ -139,6 +157,20 @@ module.exports = {
       (err, rows) => {
         if (err == null) {
           success(rows[0]);
+        } else {
+          failure(err);
+        }
+      }
+    );
+  },
+
+  uploadFile(sender, receiver, filelink, failure = console.log) {
+    con.query(
+      "INSERT INTO message (sender_id, receiver_id, content) VALUES (?, ?, ?)",
+      [sender, receiver, filelink],
+      (err, rows) => {
+        if (err == null) {
+          console.log(`${filelink} added to table`);
         } else {
           failure(err);
         }

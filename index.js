@@ -4,6 +4,8 @@ const app = express();
 const port = process.argv[2] || 4000;
 const path = require("path");
 const sha256 = require("js-sha256");
+const cors = require("cors");
+
 const cookieParser = require("cookie-parser");
 const upload = require("express-fileupload");
 const fs = require("fs");
@@ -12,12 +14,14 @@ const validator = require("validator");
 const session = require("express-session");
 app.enable("trust proxy");
 app.use(cookieParser());
+app.use(cors());
 
 const dao = require("./dao.js");
 const { read } = require("fs");
 const { json } = require("body-parser");
 const { count } = require("console");
 const file = require("fs-extra/lib/ensure/file");
+const { uploadFile } = require("./dao.js");
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -196,13 +200,18 @@ app.post("/api/upload", (req, res) => {
     // } catch(err) {
     //   console.log(err);
     // }
-    file.mv("./FILES/" + saveName, (err) => {
+    file.mv("./Files/" + saveName, (err) => {
       if (err) {
         console.log(err);
         res.end();
       } else {
         res.write(saveName);
         res.end("");
+        dao.uploadFile(
+          req.body.sender,
+          req.body.receiver,
+          "localhost:4000/api/download/" + saveName
+        );
       }
     });
   } else {
@@ -216,10 +225,13 @@ app.get("/api/download/:filename", (req, res) => {
   // console.log(file);
   // res.write(res.download(file));
   // res.end();
-  fs.readFile("./Files/" + req.params.filename, (err, data) => {
-    console.log(data);
-    res.end(data);
-  });
+
+  // fs.readFile("./Files/" + req.params.filename, (err, data) => {
+  //   console.log(data);
+  //   res.end(data);
+  //   res.download("./Files/" + req.params.filename);
+  // });
+  res.download("./Files/" + req.params.filename);
 });
 
 //  add to or remove from transfer array the client
@@ -249,7 +261,6 @@ app.get("/api/providerReady/:id", (req, res) => {
 
   const id = req.params.id;
   const session = req.cookies.session;
-
   dao.authenticate(
     id,
     session,

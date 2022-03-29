@@ -91,9 +91,9 @@ CREATE TABLE `provider` (
 --
 
 INSERT INTO `provider` (`provider_id`, `name`, `email`, `password`, `password_nothash`) VALUES
-('P1', 'Simon Riley', 'simon@gmail.com', 'ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f', '12345678'),
-('P2', 'John Price', 'john@yahoo.com', 'e24df920078c3dd4e7e8d2442f00e5c9ab2a231bb3918d65cc50906e49ecaef4', '87654321'),
-('P3', 'John MacTavish', 'john@gmail.com', 'f6ee94ecb014f74f887b9dcc52daecf73ab3e3333320cadd98bcb59d895c52f5', 'qwerty12345');
+('P1', 'Simon Riley', 'simon@gmail.com', 'ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f', 'B1t9Dun$UMSwEmg1'),
+('P2', 'John Price', 'john@yahoo.com', 'e24df920078c3dd4e7e8d2442f00e5c9ab2a231bb3918d65cc50906e49ecaef4', '^d2H4JRjkK8Y#*Fx'),
+('P3', 'John MacTavish', 'john@gmail.com', 'f6ee94ecb014f74f887b9dcc52daecf73ab3e3333320cadd98bcb59d895c52f5', '*N4A4igDYnJiQ7Lc');
 
 --
 -- Indexes for dumped tables
