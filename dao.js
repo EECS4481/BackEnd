@@ -28,14 +28,16 @@ module.exports = {
       "SELECT name, provider_id FROM provider WHERE email = ? AND password = ?",
       [queries.email, queries.password],
       (err, rows) => {
-        console.log(rows);
         if (err == null) {
+          console.log(rows);
           success(rows[0]);
         } else {
+          console.log(err);
           failure(err);
         }
       }
     );
+    console.log(con.query);
   },
 
   //  Get user and password for authentication --> return name and provider ID

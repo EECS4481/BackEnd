@@ -5,6 +5,7 @@ const port = process.argv[2] || 4000;
 const path = require("path");
 const sha256 = require("js-sha256");
 const cors = require("cors");
+
 const cookieParser = require("cookie-parser");
 const upload = require("express-fileupload");
 const fs = require("fs");
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Credentials", true);
   next();
 });
 
@@ -84,8 +86,7 @@ app.get("/api/login/:email/:password", (req, res) => {
     } else {
       //  if credentials are correct we will get name and provider ID
       const cookie = generateCookie();
-      res.cookie("session", cookie, { maxAge: 1000, httpOnly: true });
-
+      res.cookie("session", cookie, { maxAge: 1000, http: false });
       dao.addCookie(
         user.provider_id,
         cookie,
@@ -251,7 +252,6 @@ app.get("/api/providerReady/:id", (req, res) => {
 
   const id = req.params.id;
   const session = req.cookies.session;
-  console.log(session, id);
   dao.authenticate(
     id,
     session,
@@ -259,7 +259,6 @@ app.get("/api/providerReady/:id", (req, res) => {
       if (ready.indexOf(req.params.id) == -1) {
         ready.push(req.params.id);
       }
-      console.log("Provider ready");
       res.end("you are added to ready providers list!");
     },
     () => {
