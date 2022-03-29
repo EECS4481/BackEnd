@@ -21,6 +21,7 @@ const { read } = require("fs");
 const { json } = require("body-parser");
 const { count } = require("console");
 const file = require("fs-extra/lib/ensure/file");
+const { uploadFile } = require("./dao.js");
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -199,12 +200,13 @@ app.post("/api/upload", (req, res) => {
     // } catch(err) {
     //   console.log(err);
     // }
-    file.mv("./FILES/" + saveName, (err) => {
+    file.mv("./Files/" + saveName, (err) => {
       if (err) {
         console.log(err);
         res.end();
       } else {
         res.write(saveName);
+        dao.uploadFile(req.body.sender, req.body.receiver, saveName);
         res.end("File Uploaded succesfully");
       }
     });
