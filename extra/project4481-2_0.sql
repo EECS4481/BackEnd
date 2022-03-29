@@ -99,6 +99,12 @@ INSERT INTO `provider` (`provider_id`, `name`, `email`, `password`, `password_no
 -- Indexes for dumped tables
 --
 
+CREATE TABLE `sessions` (
+  `id` varchar(10) NOT NULL,
+  `session` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+COMMIT;
+
 --
 -- Indexes for table `client`
 --
