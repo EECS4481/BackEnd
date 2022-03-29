@@ -4,6 +4,8 @@ const app = express();
 const port = process.argv[2] || 4000;
 const path = require("path");
 const sha256 = require("js-sha256");
+const cors = require("cors");
+
 const cookieParser = require("cookie-parser");
 const upload = require("express-fileupload");
 const fs = require("fs");
@@ -12,6 +14,7 @@ const validator = require("validator");
 const session = require("express-session");
 app.enable("trust proxy");
 app.use(cookieParser());
+app.use(cors());
 
 const dao = require("./dao.js");
 const { read } = require("fs");
@@ -249,7 +252,6 @@ app.get("/api/providerReady/:id", (req, res) => {
 
   const id = req.params.id;
   const session = req.cookies.session;
-
   dao.authenticate(
     id,
     session,

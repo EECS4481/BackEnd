@@ -40,6 +40,24 @@ module.exports = {
     console.log(con.query);
   },
 
+  //  Get user and password for authentication --> return name and provider ID
+  getProviderByEmail(queries, success, failure = console.log) {
+    con.query(
+      "SELECT name, provider_id FROM provider WHERE email = ? AND password = ?",
+      [queries.email, queries.password],
+      (err, rows) => {
+        if (err == null) {
+          console.log(rows);
+          success(rows[0]);
+        } else {
+          console.log(err);
+          failure(err);
+        }
+      }
+    );
+    console.log(con.query);
+  },
+
   //  get conversation history
   getConversationHistory(queries, success, failure = console.log) {
     con.query(
