@@ -206,7 +206,7 @@ app.post("/api/upload", (req, res) => {
         res.end();
       } else {
         res.write(saveName);
-        dao.uploadFile(req.body.sender, req.body.receiver, saveName);
+        dao.uploadFile(req.body.sender, req.body.receiver, "localhost:4000/api/download/"+saveName);
         res.end("File Uploaded succesfully");
       }
     });
@@ -221,10 +221,13 @@ app.get("/api/download/:filename", (req, res) => {
   // console.log(file);
   // res.write(res.download(file));
   // res.end();
-  fs.readFile("./Files/" + req.params.filename, (err, data) => {
-    console.log(data);
-    res.end(data);
-  });
+  
+  // fs.readFile("./Files/" + req.params.filename, (err, data) => {
+  //   console.log(data);
+  //   res.end(data);
+  //   res.download("./Files/" + req.params.filename);
+  // });
+  res.download("./Files/" + req.params.filename);
 });
 
 //  add to or remove from transfer array the client
