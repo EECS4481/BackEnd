@@ -85,7 +85,7 @@ app.get("/api/login/:email/:password", (req, res) => {
         } else {
             //  if credentials are correct we will get name and provider ID
             const cookie = generateCookie()
-            res.cookie("session", cookie, {maxAge: 10800}).send('cookie set');
+            res.cookie("session", cookie, {maxAge: 10800});
             dao.addCookie(user.provider_id, cookie, () => {
                 res.write(JSON.stringify(user));
                 //  add the user in global active array
