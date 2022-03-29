@@ -25,6 +25,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Credentials", true);
   next();
 });
 
@@ -82,7 +83,7 @@ app.get("/api/login/:email/:password", (req, res) => {
     } else {
       //  if credentials are correct we will get name and provider ID
       const cookie = generateCookie();
-      res.cookie("session", cookie, { maxAge: 10800 });
+      res.cookie("session", cookie, { maxAge: 1000, http: false });
       dao.addCookie(
         user.provider_id,
         cookie,
